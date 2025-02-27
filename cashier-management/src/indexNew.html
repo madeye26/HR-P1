@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/payroll.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0d6efd" />
+    <meta name="description" content="نظام إدارة الرواتب والموظفين" />
+    <title>نظام إدارة الرواتب</title>
+    
+    <!-- Preconnect to Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Initial theme setup to prevent flash -->
+    <script>
+      (function() {
+        const savedTheme = localStorage.getItem('theme');
+        const isDark = savedTheme === 'dark';
+        document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+        
+        // Set initial CSS variables
+        const root = document.documentElement;
+        if (isDark) {
+          root.style.setProperty('--background-color', '#1a1a1a');
+          root.style.setProperty('--card-background', '#2d2d2d');
+          root.style.setProperty('--text-color', '#ffffff');
+          root.style.setProperty('--text-secondary', '#b3b3b3');
+          root.style.setProperty('--border-color', '#404040');
+          root.style.setProperty('--hover-color', '#363636');
+          root.style.setProperty('--input-background', '#363636');
+        } else {
+          root.style.setProperty('--background-color', '#f5f5f5');
+          root.style.setProperty('--card-background', '#ffffff');
+          root.style.setProperty('--text-color', '#333333');
+          root.style.setProperty('--text-secondary', '#666666');
+          root.style.setProperty('--border-color', '#e0e0e0');
+          root.style.setProperty('--hover-color', '#f0f0f0');
+          root.style.setProperty('--input-background', '#ffffff');
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/mainNew.tsx"></script>
+  </body>
+</html>
