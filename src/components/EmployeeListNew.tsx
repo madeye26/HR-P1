@@ -1,149 +1,207 @@
-import { useState } from 'react';
-import styled from '@emotion/styled';
+import React, { useState, useMemo } from 'react';
+import {
+  Box,
+  Paper,
+  TextField,
+  InputAdornment,
+  IconButton,
+  Chip,
+  Stack,
+  Typography,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  SelectChangeEvent,
+} from '@mui/material';
+import {
+  Search as SearchIcon,
+  FilterList as FilterIcon,
+  Clear as ClearIcon,
+} from '@mui/icons-material';
+import { 
+  DataGrid, 
+  GridColDef, 
+  GridToolbar,
+  GridPaginationModel,
+  GridRenderCellParams,
+  GridValueFormatter,
+  GridValueGetter
+} from '@mui/x-data-grid';
 import { useEmployee } from '../context/EmployeeContext';
+import { formatCurrency } from '../utils/dashboardUtils';
 import { Employee } from '../types';
-import { formatCurrency } from '../utils/payrollCalculations';
 
-const EmployeeCard = styled.div`
-  background: var(--card-background);
-  border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-`;
+const EmployeeListNew: React.FC = () => {
+  const { state } = useEmployee();
+  const [searchText, setSearchText] = useState('');
+  const [departmentFilter, setDepartmentFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
+    pageSize: 10,
+    page: 0,
+  });
 
-const EmployeeHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-`;
+  const departments = useMemo(() => {
+    const depts = new Set(state.employees.map(emp => emp.department));
+    return Array.from(depts);
+  }, [state.employees]);
 
-const SalaryDetails = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1rem;
-`;
+  const filteredEmployees = useMemo(() => {
+    return state.employees.filter(employee => {
+      const matchesSearch = searchText === '' ||
+        employee.name.toLowerCase().includes(searchText.toLowerCase()) ||
+        employee.code.toLowerCase().includes(searchText.toLowerCase()) ||
+        employee.position.title.toLowerCase().includes(searchText.toLowerCase());
 
-const DetailItem = styled.div`
-  padding: 10px;
-  background: var(--hover-color);
-  border-radius: 4px;
-  
-  label {
-    display: block;
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-    margin-bottom: 0.25rem;
-  }
-  
-  span {
-    font-weight: 600;
-    color: var(--text-color);
-  }
-`;
+      const matchesDepartment = departmentFilter === 'all' || employee.department === departmentFilter;
+      const matchesStatus = statusFilter === 'all' || employee.status === statusFilter;
 
-const NetSalary = styled.div<{ amount: number }>`
-  text-align: center;
-  padding: 15px;
-  background: ${props => props.amount >= 0 ? 'var(--success-color)' : 'var(--danger-color)'};
-  color: white;
-  border-radius: 4px;
-  margin-top: 1rem;
-  font-weight: bold;
-`;
-
-function EmployeeList() {
-  const { state, dispatch } = useEmployee();
-  const [searchTerm, setSearchTerm] = useState('');
-
-  const calculateDailyRate = (basicSalary: number): number => {
-    return basicSalary / 30; // Assuming 30 days per month
-  };
-
-  const calculateNetSalary = (employee: Employee): number => {
-    const dailyRate = calculateDailyRate(employee.basicSalary);
-    const absenceDeduction = dailyRate * employee.absenceDays;
-    
-    return (
-      employee.basicSalary +
-      employee.monthlyIncentives -
-      (absenceDeduction + employee.penalties + employee.advances)
-    );
-  };
-
-  const handleUpdateEmployee = (id: number, data: Partial<Employee>) => {
-    dispatch({
-      type: 'UPDATE_EMPLOYEE',
-      payload: { id, data }
+      return matchesSearch && matchesDepartment && matchesStatus;
     });
+  }, [state.employees, searchText, departmentFilter, statusFilter]);
+
+  const columns: GridColDef<Employee>[] = [
+    { field: 'code', headerName: 'كود الموظف', width: 130 },
+    { field: 'name', headerName: 'اسم الموظف', width: 200 },
+    {
+      field: 'position',
+      headerName: 'المسمى الوظيفي',
+      width: 180,
+      valueGetter: ({ row }: { row: Employee }) => row.position.title,
+    },
+    { field: 'department', headerName: 'القسم', width: 150 },
+    {
+      field: 'basicSalary',
+      headerName: 'الراتب الأساسي',
+      width: 150,
+      valueFormatter: ({ value }: { value: number }) => formatCurrency(value),
+    },
+    {
+      field: 'status',
+      headerName: 'الحالة',
+      width: 130,
+      renderCell: (params: GridRenderCellParams<Employee>) => (
+        <Chip
+          label={params.value === 'active' ? 'نشط' : params.value === 'inactive' ? 'غير نشط' : 'في إجازة'}
+          color={params.value === 'active' ? 'success' : params.value === 'inactive' ? 'error' : 'warning'}
+          size="small"
+        />
+      ),
+    },
+    {
+      field: 'joinDate',
+      headerName: 'تاريخ التعيين',
+      width: 150,
+      valueFormatter: ({ value }: { value: string }) => new Date(value).toLocaleDateString('ar-EG'),
+    },
+  ];
+
+  const handleDepartmentChange = (event: SelectChangeEvent) => {
+    setDepartmentFilter(event.target.value);
   };
 
-  const filteredEmployees = state.employees.filter(employee =>
-    employee.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleStatusChange = (event: SelectChangeEvent) => {
+    setStatusFilter(event.target.value);
+  };
+
+  const handleClearFilters = () => {
+    setSearchText('');
+    setDepartmentFilter('all');
+    setStatusFilter('all');
+  };
 
   return (
-    <div>
-      <div className="mb-4">
-        <input
-          type="text"
-          className="form-control"
-          placeholder="البحث عن موظف..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-      </div>
+    <Box sx={{ height: '100%', width: '100%', p: 3 }}>
+      <Paper sx={{ p: 2, mb: 3 }}>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center" sx={{ mb: 2 }}>
+          <TextField
+            label="بحث"
+            variant="outlined"
+            size="small"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            sx={{ minWidth: 200 }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+              endAdornment: searchText && (
+                <InputAdornment position="end">
+                  <IconButton size="small" onClick={() => setSearchText('')}>
+                    <ClearIcon />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
 
-      {filteredEmployees.map(employee => (
-        <EmployeeCard key={employee.id}>
-          <EmployeeHeader>
-            <h3>{employee.name}</h3>
-            <button 
-              className="btn btn-primary"
-              onClick={() => {
-                // TODO: Implement edit functionality
-              }}
+          <FormControl size="small" sx={{ minWidth: 150 }}>
+            <InputLabel>القسم</InputLabel>
+            <Select
+              value={departmentFilter}
+              label="القسم"
+              onChange={handleDepartmentChange}
             >
-              تعديل البيانات
-            </button>
-          </EmployeeHeader>
+              <MenuItem value="all">جميع الأقسام</MenuItem>
+              {departments.map((dept) => (
+                <MenuItem key={dept} value={dept}>{dept}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
 
-          <SalaryDetails>
-            <DetailItem>
-              <label>الراتب الأساسي</label>
-              <span>{formatCurrency(employee.basicSalary)}</span>
-            </DetailItem>
-            <DetailItem>
-              <label>الحوافز الشهرية</label>
-              <span>{formatCurrency(employee.monthlyIncentives)}</span>
-            </DetailItem>
-            <DetailItem>
-              <label>عدد أيام الغياب</label>
-              <span>{employee.absenceDays} يوم</span>
-            </DetailItem>
-            <DetailItem>
-              <label>الجزاءات</label>
-              <span>{formatCurrency(employee.penalties)}</span>
-            </DetailItem>
-            <DetailItem>
-              <label>السلف</label>
-              <span>{formatCurrency(employee.advances)}</span>
-            </DetailItem>
-            <DetailItem>
-              <label>معدل اليوم</label>
-              <span>{formatCurrency(calculateDailyRate(employee.basicSalary))}</span>
-            </DetailItem>
-          </SalaryDetails>
+          <FormControl size="small" sx={{ minWidth: 150 }}>
+            <InputLabel>الحالة</InputLabel>
+            <Select
+              value={statusFilter}
+              label="الحالة"
+              onChange={handleStatusChange}
+            >
+              <MenuItem value="all">جميع الحالات</MenuItem>
+              <MenuItem value="active">نشط</MenuItem>
+              <MenuItem value="inactive">غير نشط</MenuItem>
+              <MenuItem value="on_leave">في إجازة</MenuItem>
+            </Select>
+          </FormControl>
 
-          <NetSalary amount={calculateNetSalary(employee)}>
-            صافي الراتب: {formatCurrency(calculateNetSalary(employee))}
-          </NetSalary>
-        </EmployeeCard>
-      ))}
-    </div>
+          <IconButton onClick={handleClearFilters} size="small">
+            <FilterIcon />
+          </IconButton>
+        </Stack>
+
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+          {filteredEmployees.length} موظف
+        </Typography>
+      </Paper>
+
+      <DataGrid
+        rows={filteredEmployees}
+        columns={columns}
+        paginationModel={paginationModel}
+        onPaginationModelChange={setPaginationModel}
+        pageSizeOptions={[10, 25, 50]}
+        checkboxSelection
+        disableRowSelectionOnClick
+        autoHeight
+        slots={{
+          toolbar: GridToolbar,
+        }}
+        slotProps={{
+          toolbar: {
+            showQuickFilter: true,
+            quickFilterProps: { debounceMs: 500 },
+          },
+        }}
+        sx={{
+          '& .MuiDataGrid-toolbarContainer': {
+            direction: 'rtl',
+          },
+        }}
+      />
+    </Box>
   );
-}
+};
 
-export default EmployeeList;
+export default EmployeeListNew;
