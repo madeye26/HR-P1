@@ -1,211 +1,160 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
-  Box,
+  Popover,
   List,
   ListItem,
   ListItemText,
-  ListItemIcon,
-  IconButton,
   Typography,
-  Chip,
-  Divider,
+  IconButton,
+  Box,
   Button,
+  Divider,
   Badge,
-  ListItemButton,
+  ListItemIcon,
+  Tooltip,
 } from '@mui/material';
 import {
   Notifications as NotificationsIcon,
-  NotificationsActive as UrgentIcon,
-  Delete as DeleteIcon,
-  CheckCircle as ReadIcon,
+  CheckCircle as CheckCircleIcon,
+  Error as ErrorIcon,
+  Info as InfoIcon,
+  Warning as WarningIcon,
+  DoneAll as DoneAllIcon,
 } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
+import { formatDistanceToNow } from 'date-fns';
+import { ar } from 'date-fns/locale';
+import { Notification } from '../types';
 
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  type: 'info' | 'warning' | 'error' | 'success';
-  timestamp: string;
-  isRead: boolean;
-  isUrgent: boolean;
-  category: 'attendance' | 'payroll' | 'leave' | 'system';
-  actionUrl?: string;
+interface NotificationsPopoverProps {
+  notifications: Notification[];
+  open: boolean;
+  anchorEl: HTMLElement | null;
+  onClose: () => void;
+  onMarkAsRead: (notificationId: string) => void;
+  onMarkAllAsRead?: () => void;
 }
 
-const NotificationsPopover: React.FC = () => {
-  const navigate = useNavigate();
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: '1',
-      title: 'طلب إجازة جديد',
-      message: 'قام أحمد محمد بتقديم طلب إجازة جديد',
-      type: 'info',
-      timestamp: new Date().toISOString(),
-      isRead: false,
-      isUrgent: true,
-      category: 'leave',
-      actionUrl: '/leave'
-    },
-    {
-      id: '2',
-      title: 'تأخر في الحضور',
-      message: 'تم تسجيل تأخر في الحضور لـ 3 موظفين',
-      type: 'warning',
-      timestamp: new Date().toISOString(),
-      isRead: false,
-      isUrgent: false,
-      category: 'attendance',
-      actionUrl: '/attendance'
-    }
-  ]);
+const getNotificationIcon = (type: Notification['type']) => {
+  switch (type) {
+    case 'payroll':
+      return <CheckCircleIcon color="success" />;
+    case 'advance':
+      return <WarningIcon color="warning" />;
+    case 'leave':
+      return <InfoIcon color="info" />;
+    case 'attendance':
+      return <WarningIcon color="warning" />;
+    case 'system':
+      return <InfoIcon color="info" />;
+    default:
+      return <InfoIcon color="info" />;
+  }
+};
 
-  const handleMarkAsRead = (id: string) => {
-    setNotifications(prev =>
-      prev.map(notif =>
-        notif.id === id ? { ...notif, isRead: true } : notif
-      )
-    );
-  };
-
-  const handleDelete = (id: string) => {
-    setNotifications(prev => prev.filter(notif => notif.id !== id));
-  };
-
-  const handleNotificationClick = (notification: Notification) => {
-    if (notification.actionUrl) {
-      handleMarkAsRead(notification.id);
-      navigate(notification.actionUrl);
-    }
-  };
-
-  const getNotificationIcon = (type: Notification['type']) => {
-    switch (type) {
-      case 'info':
-        return <NotificationsIcon color="info" />;
-      case 'warning':
-        return <NotificationsIcon color="warning" />;
-      case 'error':
-        return <NotificationsIcon color="error" />;
-      case 'success':
-        return <NotificationsIcon color="success" />;
-      default:
-        return <NotificationsIcon />;
-    }
-  };
-
-  const getCategoryText = (category: Notification['category']) => {
-    switch (category) {
-      case 'attendance':
-        return 'الحضور والانصراف';
-      case 'payroll':
-        return 'الرواتب';
-      case 'leave':
-        return 'الإجازات';
-      case 'system':
-        return 'النظام';
-      default:
-        return category;
-    }
-  };
+const NotificationsPopover: React.FC<NotificationsPopoverProps> = ({
+  notifications,
+  open,
+  anchorEl,
+  onClose,
+  onMarkAsRead,
+  onMarkAllAsRead,
+}) => {
+  const unreadCount = notifications.filter(n => n.status === 'unread').length;
 
   return (
-    <Box sx={{ width: '100%', maxWidth: 360 }}>
+    <Popover
+      open={open}
+      anchorEl={anchorEl}
+      onClose={onClose}
+      anchorOrigin={{
+        vertical: 'bottom',
+        horizontal: 'right',
+      }}
+      transformOrigin={{
+        vertical: 'top',
+        horizontal: 'right',
+      }}
+      PaperProps={{
+        sx: {
+          width: 360,
+          maxHeight: '70vh',
+        },
+      }}
+    >
       <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Typography variant="h6">الإشعارات</Typography>
-        <Button size="small" onClick={() => navigate('/notifications')}>
-          عرض الكل
-        </Button>
+        <Typography variant="h6">
+          الإشعارات
+          {unreadCount > 0 && (
+            <Badge
+              badgeContent={unreadCount}
+              color="error"
+              sx={{ ml: 1 }}
+            />
+          )}
+        </Typography>
+        {unreadCount > 0 && onMarkAllAsRead && (
+          <Tooltip title="تحديد الكل كمقروء">
+            <IconButton onClick={onMarkAllAsRead} size="small">
+              <DoneAllIcon />
+            </IconButton>
+          </Tooltip>
+        )}
       </Box>
       <Divider />
-      <List sx={{ maxHeight: 400, overflow: 'auto' }}>
-        {notifications.length === 0 ? (
-          <ListItem>
-            <ListItemText
-              primary="لا توجد إشعارات"
-              secondary="أنت على اطلاع بكل شيء"
-            />
-          </ListItem>
-        ) : (
-          notifications.map((notification) => (
+      {notifications.length > 0 ? (
+        <List sx={{ py: 0 }}>
+          {notifications.map((notification, index) => (
             <React.Fragment key={notification.id}>
-              <ListItem disablePadding>
-                <ListItemButton
-                  onClick={() => handleNotificationClick(notification)}
-                  sx={{
-                    bgcolor: notification.isRead ? 'transparent' : 'action.hover',
-                  }}
-                >
-                  <ListItemIcon>
-                    <Badge
-                      color="error"
-                      variant="dot"
-                      invisible={notification.isRead}
+              <ListItem
+                sx={{
+                  bgcolor: notification.status === 'unread' ? 'action.hover' : 'inherit',
+                  '&:hover': {
+                    bgcolor: 'action.selected',
+                  },
+                }}
+                button
+                onClick={() => onMarkAsRead(notification.id)}
+              >
+                <ListItemIcon>
+                  {getNotificationIcon(notification.type)}
+                </ListItemIcon>
+                <ListItemText
+                  primary={notification.message}
+                  secondary={
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      component="span"
+                      dir="ltr"
                     >
-                      {getNotificationIcon(notification.type)}
-                    </Badge>
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        {notification.title}
-                        {notification.isUrgent && (
-                          <Chip
-                            size="small"
-                            color="error"
-                            label="عاجل"
-                            icon={<UrgentIcon />}
-                          />
-                        )}
-                      </Box>
-                    }
-                    secondary={
-                      <>
-                        <Typography variant="body2" color="text.secondary">
-                          {notification.message}
-                        </Typography>
-                        <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
-                          <Chip
-                            size="small"
-                            label={getCategoryText(notification.category)}
-                          />
-                          <Typography variant="caption" color="text.secondary">
-                            {new Date(notification.timestamp).toLocaleString('ar-EG')}
-                          </Typography>
-                        </Box>
-                      </>
-                    }
-                  />
-                  <Box sx={{ display: 'flex', gap: 1, ml: 1 }}>
-                    {!notification.isRead && (
-                      <IconButton
-                        size="small"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleMarkAsRead(notification.id);
-                        }}
-                      >
-                        <ReadIcon />
-                      </IconButton>
-                    )}
-                    <IconButton
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(notification.id);
-                      }}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </Box>
-                </ListItemButton>
+                      {formatDistanceToNow(new Date(notification.createdAt), {
+                        addSuffix: true,
+                        locale: ar,
+                      })}
+                    </Typography>
+                  }
+                />
               </ListItem>
-              <Divider />
+              {index < notifications.length - 1 && <Divider />}
             </React.Fragment>
-          ))
-        )}
-      </List>
-    </Box>
+          ))}
+        </List>
+      ) : (
+        <Box sx={{ p: 3, textAlign: 'center' }}>
+          <NotificationsIcon color="disabled" sx={{ fontSize: 40 }} />
+          <Typography color="text.secondary" sx={{ mt: 1 }}>
+            لا توجد إشعارات
+          </Typography>
+        </Box>
+      )}
+      {notifications.length > 0 && (
+        <Box sx={{ p: 1 }}>
+          <Button fullWidth color="inherit" size="small">
+            عرض كل الإشعارات
+          </Button>
+        </Box>
+      )}
+    </Popover>
   );
 };
 
