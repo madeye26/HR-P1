@@ -60,8 +60,9 @@ export type Action =
   | { type: 'UPDATE_ATTENDANCE'; payload: { id: string; data: Partial<Attendance> } }
   
   // Notification actions
-  | { type: 'ADD_NOTIFICATION'; payload: Notification }
+  | { type: 'ADD_NOTIFICATION'; payload: Omit<Notification, 'status' | 'createdAt'> }
   | { type: 'MARK_NOTIFICATION_READ'; payload: string }
+  | { type: 'MARK_ALL_NOTIFICATIONS_READ' }
   | { type: 'CLEAR_NOTIFICATIONS' }
   
   // Settings actions
