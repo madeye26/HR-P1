@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#1976d2" />
+    <meta name="description" content="نظام إدارة الكاشير - تطبيق لإدارة الموظفين والرواتب والحضور" />
+    
+    <!-- Preconnect to Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    
+    <!-- Load Cairo font -->
+    <link 
+      href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap" 
+      rel="stylesheet"
+    />
+    
+    <!-- Material Icons -->
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+    />
+    
+    <!-- PWA manifest -->
+    <link rel="manifest" href="/manifest.json" />
+    
+    <!-- iOS meta tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="نظام إدارة الكاشير" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    
+    <!-- Windows meta tags -->
+    <meta name="msapplication-TileColor" content="#1976d2" />
+    <meta name="msapplication-TileImage" content="/icons/ms-tile-icon.png" />
+    
+    <title>نظام إدارة الكاشير</title>
+    
+    <style>
+      /* Initial loading styles */
+      #root {
+        height: 100vh;
+      }
+      
+      .initial-loader {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        background-color: #f5f5f5;
+      }
+      
+      .initial-loader__spinner {
+        width: 50px;
+        height: 50px;
+        border: 5px solid #f3f3f3;
+        border-top: 5px solid #1976d2;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      
+      .initial-loader__text {
+        margin-top: 20px;
+        font-family: 'Cairo', sans-serif;
+        font-size: 1.2rem;
+        color: #666;
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      /* Prevent FOUC */
+      .js-loading *,
+      .js-loading *:before,
+      .js-loading *:after {
+        animation-play-state: paused !important;
+      }
+    </style>
+  </head>
+  <body class="js-loading">
+    <div id="root">
+      <div class="initial-loader">
+        <div class="initial-loader__spinner"></div>
+        <p class="initial-loader__text">جاري تحميل التطبيق...</p>
+      </div>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Remove js-loading class once page is loaded
+      window.addEventListener('load', function() {
+        document.body.classList.remove('js-loading');
+      });
+      
+      // Register service worker
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/sw.js').then(function(registration) {
+            console.log('ServiceWorker registration successful');
+          }, function(err) {
+            console.log('ServiceWorker registration failed: ', err);
+          });
+        });
+      }
+      
+      // Add to homescreen prompt
+      let deferredPrompt;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+      });
+      
+      // Handle offline/online status
+      window.addEventListener('online', function() {
+        document.body.classList.remove('offline');
+      });
+      
+      window.addEventListener('offline', function() {
+        document.body.classList.add('offline');
+      });
+      
+      // Prevent zooming on iOS devices
+      document.addEventListener('touchmove', function(event) {
+        if (event.scale !== 1) {
+          event.preventDefault();
+        }
+      }, { passive: false });
+      
+      // Double tap to zoom prevention
+      let lastTouchEnd = 0;
+      document.addEventListener('touchend', function(event) {
+        const now = (new Date()).getTime();
+        if (now - lastTouchEnd <= 300) {
+          event.preventDefault();
+        }
+        lastTouchEnd = now;
+      }, false);
+    </script>
+    <noscript>
+      <div style="text-align: center; padding: 20px; font-family: 'Cairo', sans-serif;">
+        يرجى تفعيل JavaScript لتشغيل هذا التطبيق.
+      </div>
+    </noscript>
+  </body>
+</html>

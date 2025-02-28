@@ -1,0 +1,148 @@
+{
+  "name": "نظام إدارة الكاشير",
+  "short_name": "الكاشير",
+  "description": "تطبيق لإدارة الموظفين والرواتب والحضور",
+  "theme_color": "#1976d2",
+  "background_color": "#f5f5f5",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "الحضور والانصراف",
+      "short_name": "الحضور",
+      "description": "تسجيل الحضور والانصراف",
+      "url": "/attendance",
+      "icons": [{ "src": "icons/attendance.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "الرواتب",
+      "short_name": "الرواتب",
+      "description": "إدارة الرواتب والمكافآت",
+      "url": "/payroll",
+      "icons": [{ "src": "icons/payroll.png", "sizes": "192x192" }]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "screenshots": [
+    {
+      "src": "screenshots/dashboard.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "platform": "wide",
+      "label": "لوحة التحكم"
+    },
+    {
+      "src": "screenshots/employees.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "platform": "wide",
+      "label": "إدارة الموظفين"
+    },
+    {
+      "src": "screenshots/payroll.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "platform": "wide",
+      "label": "إدارة الرواتب"
+    }
+  ],
+  "categories": ["business", "productivity", "utilities"],
+  "dir": "rtl",
+  "lang": "ar",
+  "display_override": ["standalone", "fullscreen", "minimal-ui"],
+  "features": [
+    "Cross Platform",
+    "Offline Support",
+    "Push Notifications",
+    "Responsive Design"
+  ],
+  "iarc_rating_id": "",
+  "share_target": {
+    "action": "/share-target",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "files",
+          "accept": ["image/*", "application/pdf"]
+        }
+      ]
+    }
+  },
+  "file_handlers": [
+    {
+      "action": "/open-file",
+      "accept": {
+        "application/pdf": [".pdf"],
+        "text/csv": [".csv"],
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"]
+      }
+    }
+  ],
+  "protocol_handlers": [
+    {
+      "protocol": "web+cashier",
+      "url": "/%s"
+    }
+  ],
+  "edge_side_panel": {
+    "preferred_width": 400
+  }
+}
